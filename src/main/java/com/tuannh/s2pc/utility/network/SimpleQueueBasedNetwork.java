@@ -56,7 +56,7 @@ public final class SimpleQueueBasedNetwork<I> implements Network<I> {
         queue.get(to).add(new Packet<>(from, to, message));
     }
 
-    @SuppressWarnings({"java:S1199", "java:S2273", "java:S3776", "java:S2274"})
+    @SuppressWarnings({"java:S1199", "java:S2273", "java:S3776", "java:S2274", "SynchronizationOnLocalVariableOrMethodParameter"})
     private Packet<I, ?> applyJam(final Packet<I, ?> packet) throws InterruptedException {
         Object monitor = new Object[0];
         synchronized (monitor) {

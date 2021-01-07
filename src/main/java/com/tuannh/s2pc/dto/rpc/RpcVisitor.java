@@ -8,7 +8,11 @@ public interface RpcVisitor extends Visitor<BaseRpc, Boolean> {
     default Boolean visit(BaseRpc o) {
         boolean b = preHandle(o);
         if (!b) return false;
-        // handle here
+        if (o instanceof Command) {
+            b = handle((Command) o);
+        } else if (o instanceof CommandResponse) {
+            b = handle((CommandResponse) o);
+        }
         if (!b) return false;
         postHandle(o);
         return true;
@@ -18,5 +22,6 @@ public interface RpcVisitor extends Visitor<BaseRpc, Boolean> {
         return true;
     }
     default void postHandle(BaseRpc o) {}
-    // boolean handle(ExampleRpc message);
+    boolean handle(Command message);
+    boolean handle(CommandResponse message);
 }
