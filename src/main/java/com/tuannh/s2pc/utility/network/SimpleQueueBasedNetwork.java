@@ -57,53 +57,50 @@ public final class SimpleQueueBasedNetwork<I> implements Network<I> {
     }
 
     @SuppressWarnings({"java:S1199", "java:S2273", "java:S3776", "java:S2274"})
-    private Packet<I, ?> applyJam(final Packet<I, ?> packet) {
+    private Packet<I, ?> applyJam(final Packet<I, ?> packet) throws InterruptedException {
         Object monitor = new Object[0];
-        I from = packet.getSender();
-        I to = packet.getReceiver();
-        Packet<I, ?> retPacket = packet;
-        if (!jammingMap.containsKey(ImmutablePair.of(from, to))) {
-            return retPacket;
-        } else {
-            Set<JammingEntry> jammingSet = jammingMap.get(ImmutablePair.of(from, to));
-            if (jammingSet == null || jammingSet.isEmpty()) {
-                return packet;
-            } else {
-                for (JammingEntry entry : jammingSet) {
-                    switch (entry.getType()) {
-                        case LATENCY: {
-                            try {
-                                monitor.wait((long) entry.getValue());
-                            } catch (InterruptedException e) {
-                                log.error(e.getMessage(), e);
-                                Thread.currentThread().interrupt();
-                            }
-                            break;
-                        }
-                        case LOSS: {
-                            double chance = random.nextDouble();
-                            if (chance < entry.getValue()) {
-                                // drop packet
-                                retPacket = null;
-                            }
-                            break;
-                        }
-                        default:
-                            retPacket = null;
-                    }
-                }
+        synchronized (monitor) {
+            I from = packet.getSender();
+            I to = packet.getReceiver();
+            Packet<I, ?> retPacket = packet;
+            if (!jammingMap.containsKey(ImmutablePair.of(from, to))) {
                 return retPacket;
+            } else {
+                Set<JammingEntry> jammingSet = jammingMap.get(ImmutablePair.of(from, to));
+                if (jammingSet == null || jammingSet.isEmpty()) {
+                    return packet;
+                } else {
+                    for (JammingEntry entry : jammingSet) {
+                        switch (entry.getType()) {
+                            case LATENCY: {
+                                monitor.wait((long) entry.getValue());
+                                break;
+                            }
+                            case LOSS: {
+                                double chance = random.nextDouble();
+                                if (chance < entry.getValue()) {
+                                    // drop packet
+                                    retPacket = null;
+                                }
+                                break;
+                            }
+                            default:
+                                retPacket = null;
+                        }
+                    }
+                    return retPacket;
+                }
             }
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T pollMsg(I id, long timeout, TimeUnit unit) throws InterruptedException {
+    public <T> T pollMsg(I id) throws InterruptedException {
         if (!queue.containsKey(id)) {
             return null;
         }
-        Packet<I, ?> packet = queue.get(id).poll(timeout, unit);
+        Packet<I, ?> packet = queue.get(id).poll(50, TimeUnit.MILLISECONDS);
         if (packet == null) return null;
         Packet<I, ?> cPacket = applyJam(packet);
         if (cPacket == null) return null;
@@ -122,5 +119,10 @@ public final class SimpleQueueBasedNetwork<I> implements Network<I> {
             jammingMap.put(ImmutablePair.of(from, to), new HashSet<>());
         }
         jammingMap.get(ImmutablePair.of(from, to)).add(new JammingEntry(jammingType, value));
+    }
+
+    @Override
+    public void clearJam(I from, I to) {
+        jammingMap.put(ImmutablePair.of(from, to), new HashSet<>());
     }
 }
