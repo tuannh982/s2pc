@@ -1,4 +1,4 @@
-package com.tuannh.s2pc.server;
+package com.tuannh.s2pc.server.transaction;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,6 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 public enum TransactionState {
-    NONE("none"),
     PREPARE("prepare"),
     COMMIT("commit"),
     ROLLBACK("rollback");
