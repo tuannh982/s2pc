@@ -24,7 +24,7 @@ run `main` in class `com.tuannh.s2pc.Test`
     - [x] test
 - [ ] 2PC
     - [ ] rpc (Command/CommandResponse)
-        - [x] command timeout
+        - [ ] command timeout
     - [x] client command (cmd)
     - [x] role
         - [x] Primary (coordinator)
