@@ -6,7 +6,7 @@ Simple Two Phase Commit protocol implementation
 
 # Quickstarts
 
-run `main` in class `com.tuannh.s2pc.Test`
+run `main` in class `Test`
 
 # TODOs
 
